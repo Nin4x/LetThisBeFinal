@@ -6,15 +6,11 @@ namespace FinalVersionHellKnowsWhich.LoanApp_Data.Entities
     public class User
     {
         public Guid Id { get; set; }
-        [Required]
-        public string FirstName { get; set; }
-        [Required]
-        public string LastName { get; set; }
-        [Required]
-        public string Username { get; set; }
-        [Required]
+        public required string FirstName { get; set; }
+        public required string LastName { get; set; }
+        public required string Username { get; set; }
         [EmailAddress]
-        public string Email { get; set; } 
+        public required string Email { get; set; } 
         public int Age { get; set; }
         public decimal MonthlyIncome { get; set; }
         public bool IsBlocked { get; set; } = false;
