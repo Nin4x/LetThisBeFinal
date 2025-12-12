@@ -1,4 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using FinalVersionHellKnowsWhich.LoanApp_Data.Enums;
+
 
 namespace FinalVersionHellKnowsWhich.LoanApp_Data.Entities
 {
@@ -19,24 +21,5 @@ namespace FinalVersionHellKnowsWhich.LoanApp_Data.Entities
         public User User { get; set; }
     }
 
-    public enum LoanStatus
-    {
-        Pending,
-        Approved,
-        Rejected
-    }
-
-    public enum LoanType
-    {
-        QuickLoan,
-        Auto,
-        Installment
-    }
-
-    public enum Currency
-    {
-        USD,
-        EUR,
-        GEL
-    }
+   
 }
