@@ -3,7 +3,7 @@ using FinalVersionHellKnowsWhich.LoanApp_Data.Enums;
 
 namespace FinalVersionHellKnowsWhich.LoanApp_App.DTOs.LoanDTOs
 {
-    public class LoanSearchResponseDTO
+    public class UserLoanSearchResponseDTO
     {
         public Guid Id { get; set; }
         public LoanType Type { get; set; }
@@ -11,6 +11,10 @@ namespace FinalVersionHellKnowsWhich.LoanApp_App.DTOs.LoanDTOs
         public decimal Amount { get; set; }
         public int PeriodMonths { get; set; }
         public LoanStatus Status { get; set; }
+    }
+
+    public class AccountantLoanSearchResponseDto : UserLoanSearchResponseDTO
+    {
         public Guid UserId { get; set; }
     }
 }

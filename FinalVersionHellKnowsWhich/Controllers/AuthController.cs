@@ -2,6 +2,7 @@
 using FinalVersionHellKnowsWhich.LoanApp_App.Security;
 using FinalVersionHellKnowsWhich.LoanApp_Data.DB;
 using FinalVersionHellKnowsWhich.LoanApp_Data.Entities;
+using FinalVersionHellKnowsWhich.LoanApp_Data.Enums;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -38,7 +39,7 @@ namespace FinalVersionHellKnowsWhich.Controllers
                 Age = dto.Age,
                 MonthlyIncome = dto.MonthlyIncome,
                 PasswordHash = hash,
-                UserRole = Role.User,
+                UserRole = UserRole.Role.User,
                 IsBlocked = false
             };
 
