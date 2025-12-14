@@ -4,6 +4,10 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using FinalVersionHellKnowsWhich.LoanApp_App.Interfaces;
+using FinalVersionHellKnowsWhich.LoanApp_App.Services;
+using Serilog;
+
 
 namespace FinalVersionHellKnowsWhich
 {
@@ -11,11 +15,25 @@ namespace FinalVersionHellKnowsWhich
     {
         public static void Main(string[] args)
         {
+
             var builder = WebApplication.CreateBuilder(args);
+
+                 Log.Logger = new LoggerConfiguration()
+                .ReadFrom.Configuration(builder.Configuration)
+                .Enrich.FromLogContext()
+                .WriteTo.Console()
+                .WriteTo.File(
+                    path: "Logs/log-.txt",
+                    rollingInterval: RollingInterval.Day
+                )
+                .CreateLogger();
+
+            builder.Host.UseSerilog();
 
             // Add services to the container.
 
             builder.Services.AddControllers();
+
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
@@ -69,6 +87,14 @@ namespace FinalVersionHellKnowsWhich
         }
     });
             });
+
+            builder.Services.AddScoped<IUserLoansService, UserLoanService>();
+            builder.Services.AddScoped<IAccountantUserService, AccountantUserService>();
+            builder.Services.AddScoped<IAccountantLoanService, AccountantLoanService>();
+            builder.Services.AddHttpContextAccessor();
+
+
+
 
             var app = builder.Build();
 

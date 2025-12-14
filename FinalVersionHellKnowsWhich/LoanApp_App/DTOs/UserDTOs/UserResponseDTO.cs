@@ -1,4 +1,6 @@
-﻿namespace FinalVersionHellKnowsWhich.LoanApp_App.DTOs.UserDTOs
+﻿using FinalVersionHellKnowsWhich.LoanApp_Data.Enums;
+
+namespace FinalVersionHellKnowsWhich.LoanApp_App.DTOs.UserDTOs
 {
     public class UserResponseDTO
     {
@@ -10,6 +12,6 @@
         public int Age { get; set; }
         public decimal MonthlyIncome { get; set; }
         public bool IsBlocked { get; set; }
-        public required string UserRole { get; set; }
+        public required UserRole.Role UserRole { get; set; }
     }
 }

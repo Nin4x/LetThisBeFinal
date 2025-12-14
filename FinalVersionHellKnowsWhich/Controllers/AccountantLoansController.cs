@@ -1,124 +1,73 @@
 ﻿using FinalVersionHellKnowsWhich.LoanApp_App.DTOs.LoanDTOs;
-using FinalVersionHellKnowsWhich.LoanApp_Data.DB;
-using FinalVersionHellKnowsWhich.LoanApp_Data.Entities;
-using FinalVersionHellKnowsWhich.LoanApp_Data.Enums;
+using FinalVersionHellKnowsWhich.LoanApp_App.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
 
 namespace FinalVersionHellKnowsWhich.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
+    [Authorize(Roles = "Accountant")]
     public class AccountantLoansController : ControllerBase
     {
-        private readonly AppDbContext _db;
+        private readonly IAccountantLoanService _service;
 
-        public AccountantLoansController(AppDbContext db)
+        public AccountantLoansController(IAccountantLoanService service)
         {
-            _db = db;
+            _service = service;
         }
 
-        [HttpPost("{id:guid}/NewLoan")]
-        [Authorize(Roles = "Accountant")]
+        [HttpPost("NewLoan")]
         public async Task<IActionResult> Create([FromBody] AccountantCreateLoanRequestDTO dto)
         {
-
-            var user = await _db.Users.FirstOrDefaultAsync(x => x.Id == dto.UserId);
-            if (user == null) return Unauthorized();
-            if (user.IsBlocked) return Forbid("User is blocked.");
-
-            var loan = new Loan
+            try
             {
-                Id = Guid.NewGuid(),
-                UserId = dto.UserId,
-                Type = dto.Type,
-                Amount = dto.Amount,
-                Currency = dto.Currency,
-                PeriodMonths = dto.PeriodMonths,
-                Status = LoanStatus.Pending,
-                User = user
-            };
-
-            _db.Loans.Add(loan);
-            await _db.SaveChangesAsync();
-
-            return Ok(new
-            {
-                loan.Id
-            });
+                var loanId = await _service.CreateAsync(dto);
+                return Ok(new { Id = loanId });
+            }
+            catch (UnauthorizedAccessException ex) { return Forbid(ex.Message); }
+            catch (KeyNotFoundException ex) { return NotFound(ex.Message); }
         }
 
-        [HttpGet("{id:guid}/UserLoans")]
-        [Authorize(Roles = "Accountant")]
-        public async Task<ActionResult<List<AccountantLoanSearchResponseDTO>>> UserLoans(Guid UserId)
+        // ✅ fixed route binding
+        [HttpGet("{userId:guid}/UserLoans")]
+        public async Task<ActionResult<List<AccountantLoanSearchResponseDTO>>> UserLoans(Guid userId)
         {
-            var userId = UserId;
-
-            var loans = await _db.Loans
-                .Where(x => x.UserId == userId)
-                .Select(x => new AccountantLoanSearchResponseDTO
-                {
-                    Id = x.Id,
-                    Type = x.Type,
-                    Amount = x.Amount,
-                    Currency = x.Currency,
-                    PeriodMonths = x.PeriodMonths,
-                    Status = x.Status,
-                    UserId = x.UserId
-                })
-                .ToListAsync();
-
+            var loans = await _service.GetUserLoansAsync(userId);
             return Ok(loans);
-
         }
 
         [HttpPut("{id:guid}/LoanUpdate")]
-        [Authorize(Roles = "Accountant")]
-        public async Task<IActionResult> UpdateLoan(Guid id, UpdateLoanRequestDTO dto)
+        public async Task<IActionResult> UpdateLoan(Guid id, [FromBody] UpdateLoanRequestDTO dto)
         {
-
-            var loan = await _db.Loans.FirstOrDefaultAsync(x => x.Id == id);
-            if (loan == null) return NotFound("Loan not found.");
-
-            loan.Type = dto.Type;
-            loan.Amount = dto.Amount;
-            loan.Currency = dto.Currency;
-            loan.PeriodMonths = dto.PeriodMonths;
-
-            await _db.SaveChangesAsync();
-            return Ok("Loan Updated.");
+            try
+            {
+                await _service.UpdateLoanAsync(id, dto);
+                return Ok("Loan Updated.");
+            }
+            catch (KeyNotFoundException ex) { return NotFound(ex.Message); }
         }
 
         [HttpPut("{id:guid}/LoanStatusUpdate")]
-        [Authorize(Roles = "Accountant")]
-        public async Task<IActionResult> UpdateLoanStatus(Guid id, UpdateLoanRequestStatusDTO dto)
+        public async Task<IActionResult> UpdateLoanStatus(Guid id, [FromBody] UpdateLoanRequestStatusDTO dto)
         {
-
-            var loan = await _db.Loans.FirstOrDefaultAsync(x => x.Id == id);
-            if (loan == null) return NotFound("Loan not found.");
-
-            loan.Status = dto.Status;
-
-            await _db.SaveChangesAsync();
-            return Ok("Status Updated.");
+            try
+            {
+                await _service.UpdateStatusAsync(id, dto);
+                return Ok("Status Updated.");
+            }
+            catch (KeyNotFoundException ex) { return NotFound(ex.Message); }
         }
-
 
         [HttpDelete("{id:guid}/DeleteLoan")]
-        [Authorize(Roles = "Accountant")]
         public async Task<IActionResult> DeleteLoan(Guid id)
         {
-            var loan = await _db.Loans.FirstOrDefaultAsync(x => x.Id == id);
-            if (loan == null) return NotFound("Loan not found.");
-
-            _db.Loans.Remove(loan);
-            await _db.SaveChangesAsync();
-
-            return Ok("Loan Deleted.");
+            try
+            {
+                await _service.DeleteAsync(id);
+                return Ok("Loan Deleted.");
+            }
+            catch (KeyNotFoundException ex) { return NotFound(ex.Message); }
         }
-
     }
 }

@@ -1,10 +1,8 @@
 ﻿using FinalVersionHellKnowsWhich.LoanApp_App.DTOs.LoanDTOs;
-using FinalVersionHellKnowsWhich.LoanApp_Data.DB;
-using FinalVersionHellKnowsWhich.LoanApp_Data.Entities;
-using FinalVersionHellKnowsWhich.LoanApp_Data.Enums;
+using FinalVersionHellKnowsWhich.LoanApp_App.Interfaces;
+using FinalVersionHellKnowsWhich.LoanApp_App.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 namespace FinalVersionHellKnowsWhich.Controllers
@@ -14,42 +12,26 @@ namespace FinalVersionHellKnowsWhich.Controllers
     [Authorize]
     public class UserLoansController : ControllerBase
     {
-        private readonly AppDbContext _db;
+        private readonly IUserLoansService _service;
 
-        public UserLoansController(AppDbContext db)
+        public UserLoansController(IUserLoansService service)
         {
-            _db = db;
+            _service = service;
         }
 
         [HttpPost("NewLoan")]
         [Authorize(Roles = "User")]
-        public async Task<IActionResult> Create([FromBody] CreateLoanRequestDTO dto)
+        public async Task<IActionResult> Create([FromBody] UserCreateLoanRequestDTO dto)
         {
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-            var user = await _db.Users.FirstOrDefaultAsync(x => x.Id == userId);
-            if (user == null) return Unauthorized();
-            if (user.IsBlocked) return Forbid("User is blocked.");
-
-            var loan = new Loan
+            try
             {
-                Id = Guid.NewGuid(),
-                UserId = userId,
-                Type = dto.Type,
-                Amount = dto.Amount,
-                Currency = dto.Currency,
-                PeriodMonths = dto.PeriodMonths,
-                Status = LoanStatus.Pending,
-                User = user
-            };
-
-            _db.Loans.Add(loan);
-            await _db.SaveChangesAsync();
-
-            return Ok(new
-            {
-                loan.Id
-            });
+                var loanId = await _service.CreateAsync(userId, dto);
+                return Ok(new { Id = loanId });
+            }
+            catch (UnauthorizedAccessException ex) { return Forbid(ex.Message); }
+            catch (KeyNotFoundException ex) { return NotFound(ex.Message); }
         }
 
         [HttpGet("MyLoans")]
@@ -57,45 +39,25 @@ namespace FinalVersionHellKnowsWhich.Controllers
         public async Task<ActionResult<List<UserLoanSearchResponseDTO>>> MyLoans()
         {
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-
-            var loans = await _db.Loans
-                .Where(x => x.UserId == userId)
-                .Select(x => new UserLoanSearchResponseDTO
-                {
-                    Id = x.Id,
-                    Type = x.Type,
-                    Amount = x.Amount,
-                    Currency = x.Currency,
-                    PeriodMonths = x.PeriodMonths,
-                    Status =x.Status,
-                })
-                .ToListAsync();
-
+            var loans = await _service.GetMyLoansAsync(userId);
             return Ok(loans);
-
         }
 
         [HttpPut("{id:guid}")]
         [Authorize(Roles = "User")]
-        public async Task<IActionResult> UpdateMyLoan(Guid id, UpdateLoanRequestDTO dto)
+        public async Task<IActionResult> UpdateMyLoan(Guid id, [FromBody] UpdateLoanRequestDTO dto)
         {
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-            var loan = await _db.Loans.FirstOrDefaultAsync(x => x.Id == id);
-            if (loan == null) return NotFound("Loan not found.");
-
-            if (loan.UserId != userId) return Forbid("Not your loan.");
-            if (loan.Status != LoanStatus.Pending) return BadRequest("Only pending loans can be updated.");
-
-            loan.Type = dto.Type;
-            loan.Amount = dto.Amount;
-            loan.Currency = dto.Currency;
-            loan.PeriodMonths = dto.PeriodMonths;
-
-            await _db.SaveChangesAsync();
-            return Ok("Updated.");
+            try
+            {
+                await _service.UpdateAsync(userId, id, dto);
+                return Ok("Updated.");
+            }
+            catch (KeyNotFoundException ex) { return NotFound(ex.Message); }
+            catch (UnauthorizedAccessException ex) { return Forbid(ex.Message); }
+            catch (InvalidOperationException ex) { return BadRequest(ex.Message); }
         }
-
 
         [HttpDelete("{id:guid}")]
         [Authorize(Roles = "User")]
@@ -103,17 +65,14 @@ namespace FinalVersionHellKnowsWhich.Controllers
         {
             var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-            var loan = await _db.Loans.FirstOrDefaultAsync(l => l.Id == id);
-            if (loan == null) return NotFound("Loan not found.");
-
-            if (loan.UserId != userId) return Forbid("Not your loan.");
-            if (loan.Status != LoanStatus.Pending) return BadRequest("Only pending loans can be deleted.");
-
-            _db.Loans.Remove(loan);
-            await _db.SaveChangesAsync();
-
-            return Ok("Deleted.");
+            try
+            {
+                await _service.DeleteAsync(userId, id);
+                return Ok("Deleted.");
+            }
+            catch (KeyNotFoundException ex) { return NotFound(ex.Message); }
+            catch (UnauthorizedAccessException ex) { return Forbid(ex.Message); }
+            catch (InvalidOperationException ex) { return BadRequest(ex.Message); }
         }
-
     }
 }
