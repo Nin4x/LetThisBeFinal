@@ -13,7 +13,7 @@ namespace FinalVersionHellKnowsWhich.LoanApp_App.DTOs.LoanDTOs
         public LoanStatus Status { get; set; }
     }
 
-    public class AccountantLoanSearchResponseDto : UserLoanSearchResponseDTO
+    public class AccountantLoanSearchResponseDTO : UserLoanSearchResponseDTO
     {
         public Guid UserId { get; set; }
     }

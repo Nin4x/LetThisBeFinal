@@ -12,29 +12,28 @@ namespace FinalVersionHellKnowsWhich.Controllers
     [ApiController]
     [Route("api/[controller]")]
     [Authorize]
-    public class UserLoansController : ControllerBase
+    public class AccountantLoansController : ControllerBase
     {
         private readonly AppDbContext _db;
 
-        public UserLoansController(AppDbContext db)
+        public AccountantLoansController(AppDbContext db)
         {
             _db = db;
         }
 
-        [HttpPost("NewLoan")]
-        [Authorize(Roles = "User")]
-        public async Task<IActionResult> Create([FromBody] CreateLoanRequestDTO dto)
+        [HttpPost("{id:guid}/NewLoan")]
+        [Authorize(Roles = "Accountant")]
+        public async Task<IActionResult> Create([FromBody] AccountantCreateLoanRequestDTO dto)
         {
-            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-            var user = await _db.Users.FirstOrDefaultAsync(x => x.Id == userId);
+            var user = await _db.Users.FirstOrDefaultAsync(x => x.Id == dto.UserId);
             if (user == null) return Unauthorized();
             if (user.IsBlocked) return Forbid("User is blocked.");
 
             var loan = new Loan
             {
                 Id = Guid.NewGuid(),
-                UserId = userId,
+                UserId = dto.UserId,
                 Type = dto.Type,
                 Amount = dto.Amount,
                 Currency = dto.Currency,
@@ -52,22 +51,23 @@ namespace FinalVersionHellKnowsWhich.Controllers
             });
         }
 
-        [HttpGet("MyLoans")]
-        [Authorize(Roles = "User")]
-        public async Task<ActionResult<List<UserLoanSearchResponseDTO>>> MyLoans()
+        [HttpGet("{id:guid}/UserLoans")]
+        [Authorize(Roles = "Accountant")]
+        public async Task<ActionResult<List<AccountantLoanSearchResponseDTO>>> UserLoans(Guid UserId)
         {
-            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var userId = UserId;
 
             var loans = await _db.Loans
                 .Where(x => x.UserId == userId)
-                .Select(x => new UserLoanSearchResponseDTO
+                .Select(x => new AccountantLoanSearchResponseDTO
                 {
                     Id = x.Id,
                     Type = x.Type,
                     Amount = x.Amount,
                     Currency = x.Currency,
                     PeriodMonths = x.PeriodMonths,
-                    Status =x.Status,
+                    Status = x.Status,
+                    UserId = x.UserId
                 })
                 .ToListAsync();
 
@@ -75,17 +75,13 @@ namespace FinalVersionHellKnowsWhich.Controllers
 
         }
 
-        [HttpPut("{id:guid}")]
-        [Authorize(Roles = "User")]
-        public async Task<IActionResult> UpdateMyLoan(Guid id, UpdateLoanRequestDTO dto)
+        [HttpPut("{id:guid}/LoanUpdate")]
+        [Authorize(Roles = "Accountant")]
+        public async Task<IActionResult> UpdateLoan(Guid id, UpdateLoanRequestDTO dto)
         {
-            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
             var loan = await _db.Loans.FirstOrDefaultAsync(x => x.Id == id);
             if (loan == null) return NotFound("Loan not found.");
-
-            if (loan.UserId != userId) return Forbid("Not your loan.");
-            if (loan.Status != LoanStatus.Pending) return BadRequest("Only pending loans can be updated.");
 
             loan.Type = dto.Type;
             loan.Amount = dto.Amount;
@@ -93,26 +89,35 @@ namespace FinalVersionHellKnowsWhich.Controllers
             loan.PeriodMonths = dto.PeriodMonths;
 
             await _db.SaveChangesAsync();
-            return Ok("Updated.");
+            return Ok("Loan Updated.");
+        }
+
+        [HttpPut("{id:guid}/LoanStatusUpdate")]
+        [Authorize(Roles = "Accountant")]
+        public async Task<IActionResult> UpdateLoanStatus(Guid id, UpdateLoanRequestStatusDTO dto)
+        {
+
+            var loan = await _db.Loans.FirstOrDefaultAsync(x => x.Id == id);
+            if (loan == null) return NotFound("Loan not found.");
+
+            loan.Status = dto.Status;
+
+            await _db.SaveChangesAsync();
+            return Ok("Status Updated.");
         }
 
 
-        [HttpDelete("{id:guid}")]
-        [Authorize(Roles = "User")]
-        public async Task<IActionResult> DeleteMyLoan(Guid id)
+        [HttpDelete("{id:guid}/DeleteLoan")]
+        [Authorize(Roles = "Accountant")]
+        public async Task<IActionResult> DeleteLoan(Guid id)
         {
-            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-
-            var loan = await _db.Loans.FirstOrDefaultAsync(l => l.Id == id);
+            var loan = await _db.Loans.FirstOrDefaultAsync(x => x.Id == id);
             if (loan == null) return NotFound("Loan not found.");
-
-            if (loan.UserId != userId) return Forbid("Not your loan.");
-            if (loan.Status != LoanStatus.Pending) return BadRequest("Only pending loans can be deleted.");
 
             _db.Loans.Remove(loan);
             await _db.SaveChangesAsync();
 
-            return Ok("Deleted.");
+            return Ok("Loan Deleted.");
         }
 
     }
