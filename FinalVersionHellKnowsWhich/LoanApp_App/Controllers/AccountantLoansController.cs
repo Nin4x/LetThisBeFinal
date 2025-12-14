@@ -3,7 +3,7 @@ using FinalVersionHellKnowsWhich.LoanApp_App.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace FinalVersionHellKnowsWhich.Controllers
+namespace FinalVersionHellKnowsWhich.LoanApp_App.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]

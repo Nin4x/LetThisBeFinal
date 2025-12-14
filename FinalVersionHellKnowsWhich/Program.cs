@@ -1,12 +1,15 @@
 
+using FinalVersionHellKnowsWhich.LoanApp_App.Interfaces;
 using FinalVersionHellKnowsWhich.LoanApp_App.Security;
+using FinalVersionHellKnowsWhich.LoanApp_App.Services;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using FinalVersionHellKnowsWhich.LoanApp_App.Interfaces;
-using FinalVersionHellKnowsWhich.LoanApp_App.Services;
 using Serilog;
+using System.Text;
+
 
 
 namespace FinalVersionHellKnowsWhich
@@ -32,7 +35,17 @@ namespace FinalVersionHellKnowsWhich
 
             // Add services to the container.
 
+
+            builder.Services.AddScoped<IUserLoansService, UserLoanService>();
+            builder.Services.AddScoped<IAccountantUserService, AccountantUserService>();
+            builder.Services.AddScoped<IAccountantLoanService, AccountantLoanService>();
+            builder.Services.AddScoped<IAuthService, AuthService>();
+            builder.Services.AddHttpContextAccessor();
+
             builder.Services.AddControllers();
+
+            builder.Services.AddValidatorsFromAssemblyContaining<Program>();
+            builder.Services.AddFluentValidationAutoValidation();
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
@@ -86,13 +99,6 @@ namespace FinalVersionHellKnowsWhich
         }
     });
             });
-
-            builder.Services.AddScoped<IUserLoansService, UserLoanService>();
-            builder.Services.AddScoped<IAccountantUserService, AccountantUserService>();
-            builder.Services.AddScoped<IAccountantLoanService, AccountantLoanService>();
-            builder.Services.AddScoped<IAuthService, AuthService>();
-            builder.Services.AddHttpContextAccessor();
-
 
 
 
