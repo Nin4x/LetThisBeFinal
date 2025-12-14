@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
-namespace FinalVersionHellKnowsWhich.Controllers
+namespace FinalVersionHellKnowsWhich.LoanApp_App.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
