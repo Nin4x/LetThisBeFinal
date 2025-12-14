@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using FinalVersionHellKnowsWhich.LoanApp_Data.Enums;
 
 namespace FinalVersionHellKnowsWhich.LoanApp_App.DTOs.UserDTOs
 {
