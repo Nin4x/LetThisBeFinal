@@ -41,6 +41,15 @@ namespace FinalVersionHellKnowsWhich.LoanApp_App.Services
 
             _db.Loans.Add(loan);
             await _db.SaveChangesAsync();
+            _logger.LogInformation(
+                "Accountant {AccountantId} created {type} loan for User {UserId} : Loan ID: {LoanId}, Amount: {Amount} {Currency}",
+                _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier),
+                loan.Type,
+                dto.UserId,
+                loan.Id,
+                loan.Amount,
+                loan.Currency
+            );
             return loan.Id;
         }
 
@@ -71,6 +80,16 @@ namespace FinalVersionHellKnowsWhich.LoanApp_App.Services
             loan.Currency = dto.Currency;
             loan.PeriodMonths = dto.PeriodMonths;
 
+            _logger.LogInformation(
+                "Accountant {AccountantId} updated loan {LoanId} : New Type: {Type}, New Amount: {Amount} {Currency}, New Period: {PeriodMonths} months}",
+                _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier),
+                loan.Id,
+                loan.Type,
+                loan.Amount,
+                loan.Currency,
+                loan.PeriodMonths
+            );
+
             await _db.SaveChangesAsync();
         }
 
@@ -81,6 +100,13 @@ namespace FinalVersionHellKnowsWhich.LoanApp_App.Services
 
             loan.Status = dto.Status;
             await _db.SaveChangesAsync();
+
+            _logger.LogInformation(
+                "Accountant {AccountantId} updated status of loan {LoanId} to {Status}",
+                _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier),
+                loan.Id,
+                loan.Status
+            );
         }
 
         public async Task DeleteAsync(Guid loanId)
@@ -90,6 +116,12 @@ namespace FinalVersionHellKnowsWhich.LoanApp_App.Services
 
             _db.Loans.Remove(loan);
             await _db.SaveChangesAsync();
+
+            _logger.LogInformation(
+                "Accountant {AccountantId} deleted loan {LoanId}",
+                _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier),
+                loan.Id
+            );  
         }
     }
 }

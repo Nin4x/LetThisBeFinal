@@ -127,12 +127,11 @@ namespace FinalVersionHellKnowsWhich.LoanApp_App.Services
             {
                 _logger.LogInformation(
 
-                    "Loan delete attempt by User {UserId} failed. Reason : Loan ID: {LoanId}, Status is {Status}. Date: {Date} ",
+                    "Loan delete attempt by User {UserId} failed. Reason : Loan ID: {LoanId}, Status is {Status}.",
 
                     userId,
                     loan.Id,
-                    loan.Status,
-                    DateTime.UtcNow
+                    loan.Status
                 );
                 throw new InvalidOperationException("Only pending loans can be deleted.");
             }
