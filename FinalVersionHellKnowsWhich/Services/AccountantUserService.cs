@@ -113,11 +113,10 @@ namespace FinalVersionHellKnowsWhich.LoanApp_App.Services
             await _db.SaveChangesAsync();
             _logger.LogInformation(
 
-                    "{userId} has been unblocked by {accountantId} {date} ",
+                    "{userId} has been unblocked by {accountantId} ",
 
                     userId,
-                    accountantId,
-                    DateTime.UtcNow
+                    accountantId
                 );
         }
     }

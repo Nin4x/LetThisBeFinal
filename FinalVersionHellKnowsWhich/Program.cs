@@ -91,6 +91,7 @@ namespace FinalVersionHellKnowsWhich
             builder.Services.AddScoped<IUserLoansService, UserLoanService>();
             builder.Services.AddScoped<IAccountantUserService, AccountantUserService>();
             builder.Services.AddScoped<IAccountantLoanService, AccountantLoanService>();
+            builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddHttpContextAccessor();
 
 
